@@ -1,0 +1,107 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 9,
+            "passed": 7,
+            "failed": 2,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1778384075.8124776,
+            "stop": 1778384088.9945648
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_python_file_exists",
+                "status": "passed",
+                "duration": 0.0005474521312862635,
+                "start": 1778384078.0098553,
+                "stop": 1778384078.0106533,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_run_script",
+                "status": "passed",
+                "duration": 10.80562080105301,
+                "start": 1778384078.0109034,
+                "stop": 1778384088.8168113,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_csv_output_exists",
+                "status": "passed",
+                "duration": 0.00044747593346983194,
+                "start": 1778384088.8171122,
+                "stop": 1778384088.8177319,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_csv_shape_cols",
+                "status": "passed",
+                "duration": 0.005119374953210354,
+                "start": 1778384088.8179584,
+                "stop": 1778384088.8233263,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_masks_are_no_longer_rect",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.011813993100076914,
+                "start": 1778384088.823658,
+                "stop": 1778384088.8994224,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "def test_masks_are_no_longer_rect():\n        \"\"\"\n        Given a DataFrame, asserts that the resulting polyline is not a rectangle.\n        \"\"\"\n        df = _read_polylines_csv(\"/app/test_output.csv\")\n        # Extract points into a list of (x, y) tuples\n        for _, row in df.iterrows():\n            points = list(zip(row['coords_x'], row['coords_y']))\n            # Assert that the shape is NOT a rectangle\n>           assert not is_rectangle_shapely(\n                points), \"The polyline was incorrectly identified as a rectangle.\"\nE           AssertionError: The polyline was incorrectly identified as a rectangle.\nE           assert not np.True_\nE            +  where np.True_ = is_rectangle_shapely([(344, 141), (344, 184), (377, 184), (377, 141)])\n\n/tests/test_outputs.py:209: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_mask_alignment",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.013977103983052075,
+                "start": 1778384088.8996825,
+                "stop": 1778384088.9189403,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "def test_mask_alignment():\n        '''Test that the predicted masks align reasonably with the masks generated\n         by solution.sh '''\n        out_df = _read_polylines_csv(\"/app/test_output.csv\")\n        correct_df = _read_polylines_csv(\"/app/correct_output.csv\")\n        for (_, row_out), (_, row_correct) in zip(out_df.iterrows(), correct_df.iterrows()):\n            points_out = list(zip(row_out['coords_x'], row_out['coords_y']))\n            points_correct = list(zip(row_correct['coords_x'], row_correct['coords_y']))\n            iou = calculate_iou(np.array(points_out), np.array(points_correct))\n>           assert iou >= 0.5, f\"IoU is too low: {iou}\"\nE           AssertionError: IoU is too low: 0.0016944365998305564\nE           assert 0.0016944365998305564 >= 0.5\n\n/tests/test_outputs.py:221: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_no_polyline_overlaps",
+                "status": "passed",
+                "duration": 0.05936880910303444,
+                "start": 1778384088.9191985,
+                "stop": 1778384088.9788108,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_single_contiguous_mask_per_cell",
+                "status": "passed",
+                "duration": 0.008789489045739174,
+                "start": 1778384088.9790928,
+                "stop": 1778384088.9881322,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_coords_are_flat_lists",
+                "status": "passed",
+                "duration": 0.005784714128822088,
+                "start": 1778384088.9883854,
+                "stop": 1778384088.9943678,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

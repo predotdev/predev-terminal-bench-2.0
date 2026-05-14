@@ -1,0 +1,161 @@
+Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease
+Hit:2 http://security.ubuntu.com/ubuntu noble-security InRelease
+Hit:3 http://archive.ubuntu.com/ubuntu noble-updates InRelease
+Hit:4 http://archive.ubuntu.com/ubuntu noble-backports InRelease
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+curl is already the newest version (8.5.0-2ubuntu10.9).
+0 upgraded, 0 newly installed, 0 to remove and 71 not upgraded.
+downloading uv 0.9.5 x86_64-unknown-linux-gnu
+no checksums to verify
+installing to /root/.local/bin
+  uv
+  uvx
+everything's installed!
+============================= test session starts ==============================
+platform linux -- Python 3.13.9, pytest-8.3.4, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 6 items
+
+test_outputs.py ......                                                   [100%]
+
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED test_outputs.py::test_rstan_package_installed
+PASSED test_outputs.py::test_hierarchical_model_implemented
+PASSED test_outputs.py::test_r_script_created_and_used_rstan
+PASSED test_outputs.py::test_posterior_alpha_estimation
+PASSED test_outputs.py::test_posterior_beta_estimation
+PASSED test_outputs.py::test_stan_model_sampling
+======================== 6 passed in 772.68s (0:12:52) =========================
+"""
+        try:
+            result = subprocess.run(
+                ["R", "--slave", "-e", "library(rstan); packageVersion('rstan')"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+    
+>           assert result.returncode == 0, (
+                f"RStan package is not properly installed. Return code: "
+                f"{result.returncode}, stderr: {result.stderr}"
+            )
+E           AssertionError: RStan package is not properly installed. Return code: -9, stderr: Loading required package: StanHeaders
+E             
+E           assert -9 == 0
+E            +  where -9 = CompletedProcess(args=['R', '--slave', '-e', "library(rstan); packageVersion('rstan')"], returncode=-9, stdout='', stderr='Loading required package: StanHeaders\n').returncode
+
+test_outputs.py:18: AssertionError
+_____________________ test_hierarchical_model_implemented ______________________
+
+    def test_hierarchical_model_implemented():
+        """Test that hierarchical Bayesian model structure is implemented"""
+        stan_model_path = "/app/hierarchical_model.stan"
+        assert os.path.exists(stan_model_path), (
+            f"Stan model file not found at {stan_model_path}"
+        )
+        # Check that model can be parsed by Stan
+        try:
+            r_code = f"""
+            library(rstan)
+            model_code <- readLines('{stan_model_path}')
+            # Try to parse the model to validate syntax
+            model <- stan_model(model_code=paste(model_code, collapse='\\n'))
+            cat('Model structure valid')
+            """
+    
+            result = subprocess.run(
+                ["R", "--slave", "-e", r_code], capture_output=True, text=True, timeout=180
+            )
+    
+>           assert result.returncode == 0, (
+                f"Stan model has syntax errors or invalid structure: {result.stderr}"
+            )
+E           AssertionError: Stan model has syntax errors or invalid structure: Loading required package: StanHeaders
+E             
+E             rstan version 2.32.7 (Stan version 2.32.2)
+E             
+E             For execution on a local, multicore CPU with excess RAM we recommend calling
+E             options(mc.cores = parallel::detectCores()).
+E             To avoid recompilation of unchanged Stan programs, we recommend calling
+E             rstan_options(auto_write = TRUE)
+E             For within-chain threading using `reduce_sum()` or `map_rect()` Stan functions,
+E             change `threads_per_chain` option:
+E             rstan_options(threads_per_chain = 1)
+E             
+E             
+E           assert -9 == 0
+E            +  where -9 = CompletedProcess(args=['R', '--slave', '-e', "\n        library(rstan)\n        model_code <- readLines('/app/hierarch..._sum()` or `map_rect()` Stan functions,\nchange `threads_per_chain` option:\nrstan_options(threads_per_chain = 1)\n\n').returncode
+
+test_outputs.py:49: AssertionError
+_____________________ test_r_script_created_and_used_rstan _____________________
+
+    def test_r_script_created_and_used_rstan():
+        """Test that R script 'analysis.R' was created and uses RStan"""
+        r_script_path = "/app/analysis.R"
+        assert os.path.exists(r_script_path), (
+            f"R analysis script not found at {r_script_path}"
+        )
+    
+        # Verify the script can be executed and uses RStan
+        try:
+            # Test that the script doesn't have syntax errors
+            result = subprocess.run(
+                ["R", "--slave", "--no-restore", "--no-save", "-f", r_script_path],
+                capture_output=True,
+                text=True,
+                timeout=2000,
+            )
+    
+            # Check if script ran without errors
+            # (warnings are acceptable)
+            fatal_errors = any(
+                phrase in result.stderr.lower()
+                for phrase in ["fatal", "cannot", "failed to", "error in"]
+            )
+    
+>           assert not fatal_errors or result.returncode == 0, (
+                f"R script failed to execute properly: {result.stderr}"
+            )
+E           AssertionError: R script failed to execute properly: Loading required package: StanHeaders
+E             
+E             rstan version 2.32.7 (Stan version 2.32.2)
+E             
+E             For execution on a local, multicore CPU with excess RAM we recommend calling
+E             options(mc.cores = parallel::detectCores()).
+E             To avoid recompilation of unchanged Stan programs, we recommend calling
+E             rstan_options(auto_write = TRUE)
+E             For within-chain threading using `reduce_sum()` or `map_rect()` Stan functions,
+E             change `threads_per_chain` option:
+E             rstan_options(threads_per_chain = 1)
+E             
+E             Error in h(simpleError(msg, call)) : 
+E               error in evaluating the argument 'object' in selecting a method for function 'sampling':  BaseRNG>::T(stan::mcmc::dense_e_point&) [with Model = model98ba4f39972a__namespace::model98ba4f39972a_; BaseRNG = boost::random::additive_combine_engine<boost::random::linear_congruential_engine<unsigned int, 40014, 0, 2147483563>, boost::random::linear_congruential_engine<unsigned int, 40692, 0, 2147483399> >]’
+E             /usr/lib/R/site-library/StanHeaders/include/src/stan/mcmc/hmc/hamiltonians/dense_e_metric.hpp:21:0:   required from here
+E             /usr/lib/R/site-library/RcppEigen/include/Eigen/src/Core/DenseCoeffsBase.h:654:74: warning: ignoring attributes on template argument ‘Eigen::internal::packet_traits<double>::type’ {aka ‘__m128d’} [-Wignored-attributes]
+E               654 |   return internal::first_aligned<int(unpacket_traits<DefaultPacketType>::alignment),Derived>(m);
+E                   |                                                                          ^~~~~~~~~
+E             g++: fatal error: Killed signal terminate
+E             Calls: <Anonymous> ... cxxfunctionplus -> <Anonymous> -> cxxfunction -> compileCode
+E             Error in h(simpleError(msg, call)) : 
+E               error in evaluating the argument 'object' in selecting a method for function 'sampling': invalid connection
+E             Calls: <Anonymous> ... <Anonymous> -> cxxfunctionplus -> sink -> .handleSimpleError -> h
+E             Execution halted
+E             
+E           assert (not True or 1 == 0)
+E            +  where 1 = CompletedProcess(args=['R', '--slave', '--no-restore', '--no-save', '-f', '/app/analysis.R'], returncode=1, stdout='ma...nection\nCalls: <Anonymous> ... <Anonymous> -> cxxfunctionplus -> sink -> .handleSimpleError -> h\nExecution halted\n").returncode
+
+test_outputs.py:81: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED test_outputs.py::test_posterior_alpha_estimation
+PASSED test_outputs.py::test_posterior_beta_estimation
+PASSED test_outputs.py::test_stan_model_sampling
+FAILED test_outputs.py::test_rstan_package_installed - AssertionError: RStan ...
+FAILED test_outputs.py::test_hierarchical_model_implemented - AssertionError:...
+FAILED test_outputs.py::test_r_script_created_and_used_rstan - AssertionError...
+=================== 3 failed, 3 passed in 2094.44s (0:34:54) ===================
